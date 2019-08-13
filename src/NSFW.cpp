@@ -1,4 +1,5 @@
 #include "../includes/NSFW.h"
+#include "nan.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -22,7 +23,7 @@ NSFW::NSFW(uint32_t debounceMS, std::string path, Callback *eventCallback, Callb
   mQueue(std::make_shared<EventQueue>())
   {
     HandleScope scope;
-    v8::Local<v8::Object> obj = New<v8::Object>();
+    v8::MaybeLocal<v8::Object> obj = New<v8::Object>();
     mPersistentHandle.Reset(obj);
     mInterfaceLockValid = uv_mutex_init(&mInterfaceLock) == 0;
   }
@@ -57,24 +58,24 @@ void NSFW::fireEventCallback(uv_async_t *handle) {
     return;
   }
 
-  v8::Local<v8::Array> eventArray = New<v8::Array>((int)events->size());
+  v8::MaybeLocal<v8::Array> eventArray = New<v8::Array>((int)events->size());
 
   for (unsigned int i = 0; i < events->size(); ++i) {
-    v8::Local<v8::Object> jsEvent = New<v8::Object>();
+    v8::MaybeLocal<v8::Object> jsEvent = New<v8::Object>();
 
 
-    jsEvent->Set(New<v8::String>("action").ToLocalChecked(), New<v8::Number>((*events)[i]->type));
-    jsEvent->Set(New<v8::String>("directory").ToLocalChecked(), New<v8::String>((*events)[i]->fromDirectory).ToLocalChecked());
+    jsEvent->Set(Nan::GetCurrentContext(), New<v8::String>("action").ToLocalChecked(), New<v8::Number>((*events)[i]->type));
+    jsEvent->Set(Nan::GetCurrentContext(), New<v8::String>("directory").ToLocalChecked(), New<v8::String>((*events)[i]->fromDirectory).ToLocalChecked());
 
     if ((*events)[i]->type == RENAMED) {
-      jsEvent->Set(New<v8::String>("oldFile").ToLocalChecked(), New<v8::String>((*events)[i]->fromFile).ToLocalChecked());
-      jsEvent->Set(New<v8::String>("newDirectory").ToLocalChecked(), New<v8::String>((*events)[i]->toDirectory).ToLocalChecked());
-      jsEvent->Set(New<v8::String>("newFile").ToLocalChecked(), New<v8::String>((*events)[i]->toFile).ToLocalChecked());
+      jsEvent->Set(Nan::GetCurrentContext(),New<v8::String>("oldFile").ToLocalChecked(), New<v8::String>((*events)[i]->fromFile).ToLocalChecked());
+      jsEvent->Set(Nan::GetCurrentContext(),New<v8::String>("newDirectory").ToLocalChecked(), New<v8::String>((*events)[i]->toDirectory).ToLocalChecked());
+      jsEvent->Set(Nan::GetCurrentContext(),New<v8::String>("newFile").ToLocalChecked(), New<v8::String>((*events)[i]->toFile).ToLocalChecked());
     } else {
-      jsEvent->Set(New<v8::String>("file").ToLocalChecked(), New<v8::String>((*events)[i]->fromFile).ToLocalChecked());
+      jsEvent->Set(Nan::GetCurrentContext(),New<v8::String>("file").ToLocalChecked(), New<v8::String>((*events)[i]->fromFile).ToLocalChecked());
     }
 
-    eventArray->Set(i, jsEvent);
+    eventArray->Set(Nan::GetCurrentContext(),i, jsEvent);
   }
 
   v8::Local<v8::Value> argv[] = {
