@@ -194,7 +194,7 @@ NAN_METHOD(NSFW::Start) {
     return;
   }
 
-  New(nsfw->mPersistentHandle)->Set(New("nsfw").ToLocalChecked(), info.This());
+  New(nsfw->mPersistentHandle)->Set(Nan::GetCurrentContext(), New("nsfw").ToLocalChecked(), info.This());
 
   AsyncQueueWorker(new StartWorker(nsfw, callback));
 }
